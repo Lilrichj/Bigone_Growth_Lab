@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard — BigOne Growth Lab</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  body{overflow-x:hidden}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:299}
+  .sidebar-overlay.open{display:block}
+  .inline-edit{display:flex;gap:6px;align-items:center}
+  .inline-edit input{width:80px;padding:5px 8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:var(--text-primary);font-size:13px}
+  .inline-edit input:focus{outline:none;border-color:var(--accent-cyan)}
+  .balance-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#ef4444;font-weight:600;font-size:14px;display:none}
+  .balance-banner.visible{display:flex;align-items:center;gap:10px}
+  .settings-row{display:flex;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap}
+  .settings-row .form-group{margin:0;flex:1;min-width:180px}
+  .rate-note{font-size:12px;color:var(--text-secondary);margin-top:6px}
+  .credentials-form .form-group{margin-bottom:14px}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+  .section-head h2{font-size:1.2rem;font-weight:800}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px}
+</style>
+</head>
+<body>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <h3 id="modalTitle">Order Details</h3>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" id="modalCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-brand">BigOne Growth Lab</div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-section="overview">📊 Overview</button>
+      <button class="sidebar-link" data-section="orders">📦 Orders</button>
+      <button class="sidebar-link" data-section="services">⚙️ Services</button>
+      <button class="sidebar-link" data-section="settings">🔧 Settings</button>
+      <button class="sidebar-link" data-section="credentials">🔑 Credentials</button>
+    </nav>
+    <div class="sidebar-logout">
+      <button class="sidebar-link" id="logoutBtn" style="width:100%;color:#ef4444">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="admin-hamburger" id="adminHamburger">
+          <span></span><span></span><span></span>
+        </button>
+        <h1 id="topbarTitle">Overview</h1>
+      </div>
+      <span id="adminUsernameDisplay" style="font-size:13px;color:var(--text-secondary)"></span>
+    </div>
+
+    <!-- LOW BALANCE BANNER -->
+    <div class="balance-banner" id="balanceBanner">
+      ⚠️ <span id="balanceBannerText"></span>
+    </div>
+
+    <!-- ═══════════════ OVERVIEW ═══════════════ -->
+    <div class="admin-section active" id="section-overview">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="sTotalOrders">—</div></div>
+        <div class="stat-card"><div class="stat-label">Fulfilled</div><div class="stat-value green" id="sFulfilled">—</div></div>
+        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value yellow" id="sPending">—</div></div>
+        <div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value red" id="sFailed">—</div></div>
+        <div class="stat-card"><div class="stat-label">Orders Today</div><div class="stat-value cyan" id="sOrdersToday">—</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue Today</div><div class="stat-value cyan" id="sRevenueToday">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value green" id="sTotalRevenue">—</div></div>
+        <div class="stat-card"><div class="stat-label">SMMWiz Balance</div><div class="stat-value" id="sBalance">—</div></div>
+      </div>
+      <div class="chart-card">
+        <h3>Revenue Last 30 Days (GHS)</h3>
+        <canvas id="revenueChart" height="90"></canvas>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ORDERS ═══════════════ -->
+    <div class="admin-section" id="section-orders">
+      <div class="section-head">
+        <h2>Orders</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="/admin/api/export/csv" class="btn btn-outline btn-sm">⬇ Export CSV</a>
+          <button class="btn btn-danger btn-sm" id="clearAllBtn">🗑 Clear All</button>
+        </div>
+      </div>
+      <div class="table-filters">
+        <input type="text" id="searchInput" placeholder="Search Order ID or email…" style="min-width:220px">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="fulfilling">Processing</option>
+          <option value="fulfilled">Fulfilled</option>
+          <option value="fulfillment_failed">Failed</option>
+        </select>
+        <button class="btn btn-outline btn-sm" id="refreshOrdersBtn">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Service</th>
+              <th>Email</th>
+              <th>Qty</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button class="btn btn-outline btn-sm" id="prevPage">← Prev</button>
+        <span id="pageInfo">Page 1</span>
+        <button class="btn btn-outline btn-sm" id="nextPage">Next →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════ SERVICES ═══════════════ -->
+    <div class="admin-section" id="section-services">
+      <div class="section-head">
+        <h2>Services</h2>
+        <button class="btn btn-primary btn-sm" id="syncServicesBtn">🔄 Sync from SMMWiz</button>
+      </div>
+      <div id="syncResult" style="margin-bottom:16px"></div>
+
+      <!-- Sync Panel — shown after syncing -->
+      <div id="syncServicesList" style="display:none;margin-bottom:20px">
+        <div class="admin-card">
+          <h3>Import Services from SMMWiz</h3>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px">
+            Choose how you want to import. Your existing markups are never changed.
+          </p>
+
+          <!-- Tab switcher -->
+          <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" id="tabByPlatform">📱 By Platform</button>
+            <button class="btn btn-outline btn-sm" id="tabBulkImport">⚡ Bulk Import</button>
+            <button class="btn btn-outline btn-sm" id="tabManual">☑ Manual Select</button>
+          </div>
+
+          <!-- Option 1: By Platform -->
+          <div id="panelByPlatform">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">
+              Select a platform to preview and import all its services at once.
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="platformFilterBtns">
+              <!-- Populated by JS -->
+            </div>
+            <div id="platformPreview" style="display:none">
+              <div class="table-wrap" style="max-height:300px;overflow-y:auto;margin-bottom:12px">
+                <table class="admin-table" id="platformPreviewTable">
+                  <thead><tr><th><input type="checkbox" id="checkAllPlatform"></th><th>ID</th><th>Name</th><th>Category</th><th>Min</th><th>Max</th><th>USD/1K</th><th>Markup</th></tr></thead>
+                  <tbody id="platformPreviewBody"></tbody>
+                </table>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-primary btn-sm" id="importPlatformBtn">⬇ Import Selected</button>
+                <button class="btn btn-outline btn-sm" id="selectAllPlatformBtn">Select All</button>
+                <button class="btn btn-outline btn-sm" id="deselectAllPlatformBtn">Deselect All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Option 2: Bulk Import by Platform -->
+          <div id="panelBulkImport" style="display:none">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">
+              Automatically import <strong>all services</strong> for a platform with smart default markups.
+              Existing services are updated, new ones are added. Your markups stay unchanged.
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px" id="bulkPlatformGrid">
+              <!-- Populated by JS -->
+            </div>
+            <div id="bulkResult" style="margin-top:12px"></div>
+          </div>
+
+          <!-- Option 3: Manual Select (original behavior, improved) -->
+          <div id="panelManual" style="display:none">
+            <div class="table-filters" style="margin-bottom:12px">
+              <input type="text" id="smmwizSearchInput" placeholder="Search services…" style="min-width:220px">
+              <select id="smmwizPlatformFilter" style="background:#1a2235;color:#f1f5f9;border:1px solid #222;border-radius:8px;padding:8px 12px;font-size:13px">
+                <option value="">All platforms</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="youtube">YouTube</option>
+                <option value="facebook">Facebook</option>
+                <option value="telegram">Telegram</option>
+                <option value="twitter">Twitter/X</option>
+                <option value="spotify">Spotify</option>
+                <option value="snapchat">Snapchat</option>
+              </select>
+            </div>
+            <div class="table-wrap" style="max-height:340px;overflow-y:auto">
+              <table class="admin-table" id="smmwizRawTable">
+                <thead><tr><th><input type="checkbox" id="checkAll"></th><th>ID</th><th>Name</th><th>Category</th><th>Min</th><th>Max</th><th>USD/1K</th><th>Platform</th><th>Markup</th></tr></thead>
+                <tbody id="smmwizRawBody"></tbody>
+              </table>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <button class="btn btn-primary btn-sm" id="importSelectedBtn">⬇ Import Selected</button>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+            <button class="btn btn-outline btn-sm" id="cancelSyncBtn">✕ Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mapped services table -->
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>SMMWiz ID</th><th>Name</th><th>Platform</th>
+              <th>Min</th><th>Max</th><th>USD/1K</th>
+              <th>Markup</th><th>GHS/1K</th><th>Active</th>
+            </tr>
+          </thead>
+          <tbody id="servicesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════ SETTINGS ═══════════════ -->
+    <div class="admin-section" id="section-settings">
+      <h2 style="margin-bottom:20px">Settings</h2>
+
+      <!-- Price Sync Status Card -->
+      <div class="admin-card" id="priceSyncCard">
+        <h3>🔄 Automatic Price Sync</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">
+          SMMWiz prices are fetched automatically every <strong>6 hours</strong> and your GHS prices update instantly. No manual action needed.
+        </p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Last Sync</div>
+            <div id="lastSyncTime" style="font-size:14px;font-weight:600;color:var(--text-primary)">Loading…</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Next Sync</div>
+            <div id="nextSyncTime" style="font-size:14px;font-weight:600;color:var(--text-primary)">—</div>
+          </div>
+        </div>
+        <div id="priceSyncAlerts" style="display:none;margin-bottom:14px"></div>
+        <button class="btn btn-outline btn-sm" id="forceSyncBtn">⚡ Force Sync Now</button>
+      </div>
+
+      <div class="admin-card">
+        <h3>💱 USD to GHS Exchange Rate</h3>
+        <div id="currentRateDisplay" style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">Loading…</div>
+        <div class="settings-row">
+          <div class="form-group">
+            <label class="admin-label">Rate (1 USD = ? GHS)</label>
+            <input type="number" class="admin-input" id="settingRate" step="0.01" min="1" placeholder="15.5">
+          </div>
+          <button class="btn btn-primary btn-sm" id="saveRateBtn" style="flex-shrink:0;height:42px">Update Rate</button>
+        </div>
+        <div class="rate-note">Current GHS prices update immediately across the site when this is saved.</div>
+      </div>
+
+      <div class="admin-card">
+        <h3>🌐 Site Settings</h3>
+        <div class="settings-row">
+          <div class="form-group">
+            <label class="admin-label">Site Name</label>
+            <input type="text" class="admin-input" id="settingSiteName" placeholder="BigOne Growth Lab">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="form-group">
+            <label class="admin-label">WhatsApp Number (with country code, no +)</label>
+            <input type="text" class="admin-input" id="settingWhatsapp" placeholder="233241234567">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="form-group">
+            <label class="admin-label">Low Balance Alert Threshold (USD)</label>
+            <input type="number" class="admin-input" id="settingThreshold" step="1" min="1" placeholder="10">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="saveSiteBtn">Save Settings</button>
+      </div>
+
+      <div id="settingsAlert" style="display:none;margin-top:10px"></div>
+    </div>
+
+    <!-- ═══════════════ CREDENTIALS ═══════════════ -->
+    <div class="admin-section" id="section-credentials">
+      <h2 style="margin-bottom:20px">Change Credentials</h2>
+      <div class="admin-card" style="max-width:480px">
+        <h3>🔑 Update Username / Password</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px">Leave new username or password blank to keep unchanged. You will be logged out after saving.</p>
+        <div class="credentials-form">
+          <div class="form-group">
+            <label class="admin-label">Current Password *</label>
+            <input type="password" class="admin-input" id="credCurrentPw" placeholder="Required">
+          </div>
+          <div class="form-group">
+            <label class="admin-label">New Username (optional)</label>
+            <input type="text" class="admin-input" id="credNewUser" placeholder="Leave blank to keep current">
+          </div>
+          <div class="form-group">
+            <label class="admin-label">New Password (optional, min 8 chars)</label>
+            <input type="password" class="admin-input" id="credNewPw" placeholder="Leave blank to keep current">
+          </div>
+        </div>
+        <div id="credAlert" style="display:none;margin-bottom:12px"></div>
+        <button class="btn btn-primary" id="saveCredsBtn">Save Changes & Logout</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="/admin/dashboard.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BigOne Growth Lab — Social Media Growth Services</title>
+<meta name="description" content="Real followers, likes, views and more for TikTok, Instagram, YouTube and beyond. Fast, safe and affordable.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:title" content="BigOne Growth Lab">
+<meta property="og:description" content="Real followers, likes, views and more for TikTok, Instagram, YouTube and beyond. Fast, safe and affordable.">
+<meta property="og:image" content="https://bigonegrowthlab.store/logo-share-512.png">
+<meta property="og:url" content="https://bigonegrowthlab.store">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- FLOATING WHATSAPP BUTTON -->
+<a id="whatsappFloat" href="#" target="_blank" rel="noopener noreferrer"
+   aria-label="Chat on WhatsApp"
+   style="display:none;position:fixed;bottom:24px;right:24px;z-index:999;
+          width:56px;height:56px;border-radius:50%;background:#25D366;
+          align-items:center;justify-content:center;
+          box-shadow:0 4px 20px rgba(37,211,102,0.45);
+          transition:transform .2s ease,box-shadow .2s ease;text-decoration:none;">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+</a>
+
+<!-- NAV -->
+<nav class="navbar">
+  <div class="navbar-brand">BigOne Growth Lab</div>
+  <div class="navbar-links">
+    <button class="nav-link active" data-page="home">Home</button>
+    <button class="nav-link" data-page="services">Services</button>
+    <button class="nav-link" data-page="order">Order</button>
+    <button class="nav-link" data-page="pricing">Pricing</button>
+    <button class="nav-link" data-page="faq">FAQ</button>
+    <button class="nav-link" data-page="contact">Contact</button>
+    <a href="/track" class="btn btn-primary btn-sm" style="margin-left:8px">Track Order</a>
+  </div>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <button class="nav-link" data-page="home" data-mobile="1">Home</button>
+  <button class="nav-link" data-page="services" data-mobile="1">Services</button>
+  <button class="nav-link" data-page="order" data-mobile="1">Order</button>
+  <button class="nav-link" data-page="pricing" data-mobile="1">Pricing</button>
+  <button class="nav-link" data-page="faq" data-mobile="1">FAQ</button>
+  <button class="nav-link" data-page="contact" data-mobile="1">Contact</button>
+  <a href="/track" class="btn btn-primary btn-sm" style="margin-top:6px">Track Order</a>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ HOME -->
+<div id="page-home" class="page active">
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-badge">⚡ Fast · Safe · Reliable</div>
+      <h1>Grow Your Social Media with<span class="hero-br"> </span><span>BigOne Growth Lab</span></h1>
+      <p>Real followers, likes, views and more for TikTok, Instagram, YouTube and beyond.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary" data-page="order">🚀 Order Now</button>
+        <button class="btn btn-outline" data-page="services">View Services</button>
+      </div>
+      <div class="platform-grid" id="heroPlatforms"></div>
+    </div>
+  </section>
+
+  <!-- Live Stats Bar -->
+  <section class="stats-bar">
+    <div class="stats-bar-inner">
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" id="statOrders">—</div>
+        <div class="stat-bar-label">Orders Completed</div>
+      </div>
+      <div class="stat-bar-divider"></div>
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" id="statCustomers">—</div>
+        <div class="stat-bar-label">Happy Customers</div>
+      </div>
+      <div class="stat-bar-divider"></div>
+      <div class="stat-bar-item">
+        <div class="stat-bar-value" id="statServices">—</div>
+        <div class="stat-bar-label">Services Available</div>
+      </div>
+      <div class="stat-bar-divider"></div>
+      <div class="stat-bar-item">
+        <div class="stat-bar-value">1–5 min</div>
+        <div class="stat-bar-label">Avg. Delivery Time</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="section-title">
+      <h2>Why Choose BigOne Growth Lab?</h2>
+      <p>We make growing your social presence simple, safe and affordable.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Instant Delivery</h3>
+        <p>Most orders begin processing within minutes of payment. Watch your numbers grow in real time.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>100% Safe</h3>
+        <p>We never ask for your password. Our methods comply with platform guidelines to keep your account secure.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>24/7 Support</h3>
+        <p>Got an issue? Our support team is available around the clock via email and WhatsApp.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works">
+    <div class="section-title">
+      <h2>How It Works</h2>
+      <p>Three simple steps to boost your social media presence.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Pick Your Service</h3>
+        <p>Choose from followers, likes, views, and more across all major platforms.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Enter Your Details & Pay</h3>
+        <p>Add your profile link, select quantity, and pay securely with Mobile Money or card.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Watch Your Growth Begin</h3>
+        <p>Delivery starts fast. Track your order anytime with your unique Order ID.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p class="footer-trust-line">🔒 Secured by Korapay &nbsp;·&nbsp; SSL Encrypted &nbsp;·&nbsp; PCI-DSS Compliant</p>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <button class="footer-nav-btn" data-page="faq">FAQ</button>
+      <button class="footer-nav-btn" data-page="contact">Support</button>
+      <a href="/track">Order Status</a>
+    </div>
+    <p class="footer-copy">© 2026 All rights reserved. We never store your card details.</p>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ SERVICES -->
+<div id="page-services" class="page">
+  <div class="services-page">
+    <div class="section-title" style="text-align:left;margin-bottom:28px">
+      <h2>Our Services</h2>
+      <p>Select a platform to filter or browse all available services.</p>
+    </div>
+    <div class="filter-tabs" id="serviceTabs"></div>
+    <div class="services-grid" id="servicesGrid"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ ORDER -->
+<div id="page-order" class="page">
+  <div class="order-page">
+    <h2 style="margin-bottom:24px;font-size:1.5rem;font-weight:800">Place an Order</h2>
+
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      <div class="step-dot active" id="sdot1">1</div>
+      <div class="step-line" id="sline1"></div>
+      <div class="step-dot" id="sdot2">2</div>
+      <div class="step-line" id="sline2"></div>
+      <div class="step-dot" id="sdot3">3</div>
+    </div>
+
+    <div class="order-form-card">
+      <!-- Step 1: Platform -->
+      <div class="order-step active" id="ostep1">
+        <h3 style="margin-bottom:20px;font-size:1rem;font-weight:700">Step 1 — Choose a Platform</h3>
+        <div class="platform-select-grid" id="platformSelectGrid"></div>
+        <div class="step-nav" style="margin-top:24px">
+          <button class="btn btn-primary" id="btnStep1Next" data-step="2" disabled>Next →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Service & Details -->
+      <div class="order-step" id="ostep2">
+        <h3 style="margin-bottom:20px;font-size:1rem;font-weight:700">Step 2 — Service & Details</h3>
+        <div class="form-group">
+          <label>Service</label>
+          <select id="serviceSelect">
+            <option value="">Select a service…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Your Link</label>
+          <input type="url" id="linkInput" placeholder="https://www.tiktok.com/@yourhandle">
+        </div>
+        <div class="qty-row">
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="qtyInput" min="1" value="100">
+            <div class="qty-hint" id="qtyHint">Min: — / Max: —</div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="emailInput" placeholder="your@email.com">
+          </div>
+        </div>
+        <input type="range" id="qtySlider" min="1" max="1000" value="100">
+        <div class="price-summary" id="priceSummary" style="display:none">
+          <div class="price-summary-row"><span>Price per 1,000</span><span id="psPerK">—</span></div>
+          <div class="price-summary-row"><span>Quantity</span><span id="psQty">—</span></div>
+          <div class="price-summary-row total"><span>Total</span><span id="psTotal">—</span></div>
+        </div>
+        <!-- Korapay minimum order warning -->
+        <div id="minAmountWarning" style="display:none;margin-top:12px;padding:12px 16px;
+             background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);
+             border-radius:9px;font-size:13px;color:#f59e0b;line-height:1.5">
+          ⚠️ <strong>Minimum payment is GHS 10.00.</strong>
+          Your current total is <strong id="warnTotal">GHS 0.00</strong>.
+          Please increase your quantity to continue.
+        </div>
+        <div class="step-nav" style="margin-top:20px">
+          <button class="btn btn-outline" data-step="1">← Back</button>
+          <button class="btn btn-primary" id="btnStep2Next" data-step="3" disabled>Review Order →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Review & Pay -->
+      <div class="order-step" id="ostep3">
+        <h3 style="margin-bottom:20px;font-size:1rem;font-weight:700">Step 3 — Review & Pay</h3>
+        <div class="order-summary-card" id="orderSummaryCard"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:15px" id="payBtn">
+          🔒 Pay with Korapay
+        </button>
+        <p style="text-align:center;font-size:12px;color:var(--text-secondary);margin-top:10px">
+          Secured by Korapay · GHS only · Mobile Money, Card & Bank Transfer
+        </p>
+        <div class="step-nav" style="margin-top:14px">
+          <button class="btn btn-outline" id="btnStep3Back" data-step="2">← Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PRICING -->
+<div id="page-pricing" class="page">
+  <div class="pricing-page">
+    <div class="section-title" style="text-align:left;margin-bottom:28px">
+      <h2>Pricing</h2>
+      <p>Transparent per-service pricing in GHS. All prices include delivery.</p>
+    </div>
+    <div class="pricing-table-wrap">
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Price / 1K (GHS)</th>
+            <th>Min Order</th>
+            <th>Max Order</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="pricingTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ FAQ -->
+<div id="page-faq" class="page">
+  <div class="faq-page">
+    <div class="section-title" style="text-align:left;margin-bottom:32px">
+      <h2>Frequently Asked Questions</h2>
+      <p>Everything you need to know about our services.</p>
+    </div>
+    <div id="faqList"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ CONTACT -->
+<div id="page-contact" class="page">
+  <div class="contact-page">
+    <div class="section-title" style="text-align:left;margin-bottom:8px">
+      <h2>Contact Us</h2>
+      <p>We're here to help. Send us a message and we'll get back to you shortly.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info-card">
+        <div class="contact-info-item">
+          <div class="contact-info-icon">✉️</div>
+          <div>
+            <h4>Email</h4>
+            <p><a href="mailto:bigonegrowthlab@gmail.com">bigonegrowthlab@gmail.com</a></p>
+          </div>
+        </div>
+        <div class="contact-info-item" id="whatsappContactCard" style="display:none">
+          <div class="contact-info-icon" style="background:rgba(37,211,102,0.12)">💬</div>
+          <div>
+            <h4>WhatsApp</h4>
+            <p id="whatsappContactLink">Chat with us directly on WhatsApp</p>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">⏱️</div>
+          <div>
+            <h4>Response Time</h4>
+            <p>Within 2 hours during business hours</p>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon">📦</div>
+          <div>
+            <h4>Order Issues</h4>
+            <p>Have your Order ID (BOG-XXXXXXXX) ready when contacting support.</p>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form-card">
+        <h3>Send a Message</h3>
+        <div id="contactAlert" style="display:none"></div>
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="cName" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="cEmail" placeholder="john@email.com">
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="cMessage" rows="5" placeholder="Describe your issue or question…" style="resize:vertical"></textarea>
+        </div>
+        <button class="btn btn-primary" id="contactBtn" style="width:100%;justify-content:center">
+          Send Message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js" defer></script>
+</body>
+</html>

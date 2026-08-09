@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Track Order — BigOne Growth Lab</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:title" content="Track Your Order — BigOne Growth Lab">
+<meta property="og:image" content="https://bigonegrowthlab.store/logo-share-512.png">
+<meta property="og:url" content="https://bigonegrowthlab.store/track">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .track-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:60px 24px 80px}
+  .track-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:36px;width:100%;max-width:580px;margin-bottom:24px}
+  .track-title{font-size:1.6rem;font-weight:800;margin-bottom:6px}
+  .track-sub{color:var(--text-secondary);font-size:14px;margin-bottom:28px}
+  .track-input-row{display:flex;gap:10px}
+  .track-input-row input{flex:1;padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text-primary);font-size:15px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+  .track-input-row input:focus{outline:none;border-color:var(--accent-cyan)}
+  .result-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:32px;width:100%;max-width:580px;display:none}
+  .result-card.visible{display:block;animation:fadeIn .3s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .result-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+  .result-platform-icon{width:44px;height:44px;flex-shrink:0}
+  .result-id{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent-cyan);letter-spacing:1.5px}
+  .result-service{font-size:14px;color:var(--text-secondary);margin-top:2px}
+  .detail-grid{display:grid;gap:0}
+  .detail-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px;gap:16px}
+  .detail-row:last-child{border:none}
+  .detail-label{color:var(--text-secondary);flex-shrink:0}
+  .detail-value{font-weight:600;text-align:right;word-break:break-all}
+  .error-card{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:20px;color:#ef4444;font-size:14px;font-weight:600;display:none;max-width:580px;width:100%;margin-bottom:16px}
+  .error-card.visible{display:block}
+  .loading-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:32px;width:100%;max-width:580px;text-align:center;display:none}
+  .loading-card.visible{display:block}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-brand">BigOne Growth Lab</div>
+  <div class="navbar-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/#order" class="btn btn-primary btn-sm" style="margin-left:8px">Place Order</a>
+  </div>
+</nav>
+
+<div class="track-wrap">
+
+  <div class="track-card">
+    <h1 class="track-title">📦 Track Your Order</h1>
+    <p class="track-sub">Enter your Order ID (e.g. BOG-XXXXXXXX) to check the status of your order.</p>
+    <div class="track-input-row">
+      <input type="text" id="orderIdInput" placeholder="BOG-XXXXXXXXXX" maxlength="20">
+      <button class="btn btn-primary" id="trackBtn">Track</button>
+    </div>
+  </div>
+
+  <div class="loading-card" id="loadingCard">
+    <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 14px"></div>
+    <p style="color:var(--text-secondary);font-size:14px">Looking up your order…</p>
+  </div>
+
+  <div class="error-card" id="errorCard"></div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="result-platform-icon" id="rPlatformIcon"></div>
+      <div>
+        <div class="result-id" id="rId"></div>
+        <div class="result-service" id="rService"></div>
+      </div>
+      <div style="margin-left:auto" id="rBadge"></div>
+    </div>
+    <div class="detail-grid" id="rDetails"></div>
+    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+      <a href="/" class="btn btn-outline btn-sm">← Place New Order</a>
+      <a href="mailto:bigonegrowthlab@gmail.com" class="btn btn-outline btn-sm">✉️ Contact Support</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="/track.js" defer></script>
+</body>
+</html>

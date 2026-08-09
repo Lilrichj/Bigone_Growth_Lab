@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "PowerShell(cd \"C:\\\\Users\\\\EDIYIE\\\\Downloads\\\\Bigone_Growth lab\"; foreach \\($f in @\\(\"server.js\",\"db/queries.js\",\"db/migrate.js\",\"services/email.js\"\\)\\) { node --check $f; if \\($?\\) { \"$f : OK\" } else { \"$f : FAILED\" } }; \"--- package.json parse ---\"; node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('package.json','utf8'\\)\\); console.log\\('package.json: valid'\\)\")"
+    ]
+  }
+}
