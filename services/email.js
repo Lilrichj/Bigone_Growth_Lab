@@ -6,6 +6,11 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
+  // Force IPv4. Render's containers (and many cloud/container platforms)
+  // can't route outbound IPv6 traffic, but Gmail's SMTP hostname resolves to
+  // both an IPv4 and IPv6 address — without this, Node can pick the IPv6
+  // one and every send fails with ENETUNREACH before it ever reaches Google.
+  family: 4,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -133,7 +138,7 @@ async function sendOrderConfirmation(order) {
             Didn't get your order? Contact us with your Order ID: <strong style="color:#f1f5f9;">${esc(order.internal_id)}</strong>
           </p>
           <p style="margin:0;font-size:12px;color:#475569;">
-            &#169; ${new Date().getFullYear()} BigOne Growth Lab &nbsp;&middot;&nbsp;
+            &#169; 2025 BigOne Growth Lab &nbsp;&middot;&nbsp;
             <a href="mailto:bigonegrowthlab@gmail.com" style="color:#00e5ff;text-decoration:none;">bigonegrowthlab@gmail.com</a>
           </p>
         </td></tr>
