@@ -229,7 +229,10 @@ input,textarea,select{font-family:inherit}
 .tier-premium{background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)}
 
 /* ─── ORDER PAGE ──────────────────────────────────────────────────────────── */
-.order-page{padding:48px 24px;max-width:680px;margin:0 auto}
+/* Extra bottom padding: the fixed WhatsApp button (bottom:24px, 56px tall)
+   otherwise sits on top of the last few form elements on shorter viewports,
+   which is how the minimum-order warning ended up visually hidden behind it. */
+.order-page{padding:48px 24px 100px;max-width:680px;margin:0 auto}
 .step-indicator{display:flex;align-items:center;gap:0;margin-bottom:36px}
 .step-dot{
   display:flex;align-items:center;justify-content:center;
