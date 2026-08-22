@@ -52,7 +52,7 @@ const PLATFORMS = {
 const FAQS = [
   ["Is it safe for my account?","Yes. We only use methods that comply with each platform's terms. We never ask for your password or personal login information."],
   ["Do I need to give you my password?","Absolutely not. We never ask for your password. All we need is your public profile or post link."],
-  ["How fast will delivery start?","Most orders begin within 1–5 minutes of payment. Some services may take up to 24 hours depending on the type and quantity ordered."],
+  ["How fast will delivery start?","Most orders begin within 1–8 hours of payment. Some services may take up to 24 hours depending on the type and quantity ordered."],
   ["What if my followers or likes drop after delivery?","Some fluctuation is normal as platforms conduct routine reviews. Contact our support team and we will look into it for you."],
   ["What does \"Refill\" (e.g. 30D, 90D, Lifetime) mean?","Refill is a free top-up guarantee. If your followers, likes, or views drop after delivery — which can happen naturally as platforms clean up inactive accounts — we automatically restore the lost amount at no extra cost, within the stated window. 30D Refill covers drops for 30 days, 90D Refill covers 90 days, and Lifetime Refill means the guarantee never expires. Services without a refill tag are delivered as-is with no replacement guarantee."],
   ["What does \"Retention\" mean (e.g. Facebook 15min Retention)?","Retention refers to how long a viewer must watch a video before the view is counted. A \"15min Retention\" view means the viewer engaged with your content for 15 minutes before it qualified, making these views higher quality and more valuable for engagement and monetization than instant low-quality views that disappear quickly."],
