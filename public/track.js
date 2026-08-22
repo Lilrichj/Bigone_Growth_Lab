@@ -79,7 +79,7 @@ function renderResult(o) {
     ['Link',               escHtml(o.link)],
     ['Amount Paid',        `GHS ${escHtml(amountGhs)}`],
     ['Order Date',         escHtml(createdAt)],
-    ['Estimated Delivery', escHtml(o.estimated_delivery || '1–5 minutes')],
+    ['Estimated Delivery', escHtml(o.estimated_delivery || '1-8 hours')],
   ];
 
   // Show generic message for failures — never expose internal supplier IDs or error details

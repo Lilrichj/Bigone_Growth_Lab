@@ -630,7 +630,7 @@ app.post('/api/payment/initialize', paymentLimiter, async (req, res) => {
       serviceId, serviceName: service.name, platform: service.platform,
       link, quantity: qty, email,
       amount: amountPesewas, currency: 'GHS', usdAmount,
-      estimatedDelivery: '1–5 minutes',
+      estimatedDelivery: '1–30 minutes',
     });
 
     const koraData = await korapayInitialize({
