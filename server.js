@@ -463,7 +463,7 @@ app.get('/api/stats/public', async (req, res) => {
       ordersCompleted:   BASE_ORDERS    + parseInt(row.orders_completed,  10),
       happyCustomers:    BASE_CUSTOMERS + parseInt(row.happy_customers,   10),
       servicesAvailable: parseInt(serviceCount.rows[0].count, 10),
-      avgDelivery:       '1–5 minutes',
+      avgDelivery:       '1–8 hours',
     });
   } catch (err) {
     console.error('GET /api/stats/public:', err.message);
@@ -472,7 +472,7 @@ app.get('/api/stats/public', async (req, res) => {
       ordersCompleted:   BASE_ORDERS,
       happyCustomers:    BASE_CUSTOMERS,
       servicesAvailable: 0,
-      avgDelivery:       '1–5 minutes',
+      avgDelivery:       '1–8 hours',
     });
   }
 });
@@ -630,7 +630,7 @@ app.post('/api/payment/initialize', paymentLimiter, async (req, res) => {
       serviceId, serviceName: service.name, platform: service.platform,
       link, quantity: qty, email,
       amount: amountPesewas, currency: 'GHS', usdAmount,
-      estimatedDelivery: '1–30 minutes',
+      estimatedDelivery: '1–8 hours',
     });
 
     const koraData = await korapayInitialize({

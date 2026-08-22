@@ -546,7 +546,7 @@ function goStep(n) {
       <div class="summary-row"><span>Quantity</span><span>${qty.toLocaleString()}</span></div>
       <div class="summary-row"><span>Link</span><span style="word-break:break-all;max-width:220px;text-align:right">${esc(link)}</span></div>
       <div class="summary-row"><span>Email</span><span>${esc(email)}</span></div>
-      <div class="summary-row"><span>Est. Delivery</span><span>1–5 minutes</span></div>
+      <div class="summary-row"><span>Est. Delivery</span><span>1-8 hours</span></div>
       <div class="summary-row"><span>Total</span><span style="color:var(--accent-cyan);font-weight:800">GHS ${total.toFixed(2)}</span></div>`;
   }
 
