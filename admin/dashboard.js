@@ -55,17 +55,18 @@ function openSidebar()  { document.getElementById('sidebar').classList.add('open
 function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
 
 // ─── SECTION NAV ──────────────────────────────────────────────────────────
-const SECTION_TITLES = { overview:'Overview', orders:'Orders', services:'Services', settings:'Settings', credentials:'Credentials' };
+const SECTION_TITLES = { overview:'Overview', orders:'Orders', 'needs-attention':'Needs Attention', services:'Services', settings:'Settings', credentials:'Credentials' };
 function showSection(name) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
   document.getElementById('section-' + name).classList.add('active');
-  document.querySelectorAll('.sidebar-link').forEach(l => { if (l.textContent.toLowerCase().includes(name)) l.classList.add('active'); });
+  document.querySelectorAll('.sidebar-link').forEach(l => { if (l.dataset.section === name) l.classList.add('active'); });
   document.getElementById('topbarTitle').textContent = SECTION_TITLES[name] || name;
   closeSidebar();
-  if (name === 'orders')   loadOrders();
-  if (name === 'services') loadServices();
-  if (name === 'settings') loadSettings();
+  if (name === 'orders')           loadOrders();
+  if (name === 'needs-attention')  loadNeedsAttention();
+  if (name === 'services')         loadServices();
+  if (name === 'settings')         loadSettings();
 }
 
 // ─── TOAST ─────────────────────────────────────────────────────────────────
@@ -187,6 +188,7 @@ let ordersPage = 0;
 const PAGE_SIZE = 25;
 let searchTimer;
 let currentOrders = []; // orders currently on screen, for safe lookup by id (avoids embedding JSON in HTML attributes)
+let currentNeedsAttentionOrders = []; // separate from currentOrders — kept distinct so a refresh of one table can't clobber lookups for the other
 
 function debounceLoad() { clearTimeout(searchTimer); searchTimer = setTimeout(loadOrders, 400); }
 
@@ -217,7 +219,10 @@ async function loadOrders() {
           <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(o.email)}</td>
           <td>${Number(o.quantity).toLocaleString()}</td>
           <td>GHS ${(o.amount/100).toFixed(2)}</td>
-          <td><span class="badge badge-${safeStatusClass(o.status)}">${esc(o.status).replace('fulfillment_','')}</span></td>
+          <td>
+            <span class="badge badge-${safeStatusClass(o.status)}">${esc(o.status).replace('fulfillment_','')}</span>
+            ${o.smmwiz_remains != null ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${(Number(o.quantity)-Number(o.smmwiz_remains)).toLocaleString()}/${Number(o.quantity).toLocaleString()}</div>` : ''}
+          </td>
           <td style="white-space:nowrap">${new Date(o.created_at).toLocaleDateString('en-GH')}</td>
           <td>
             <div class="table-actions">
@@ -239,12 +244,64 @@ async function loadOrders() {
 
 function changePage(dir) { ordersPage = Math.max(0, ordersPage + dir); loadOrders(); }
 
+// ─── NEEDS ATTENTION ─────────────────────────────────────────────────────────
+// Three cases surfaced here, distinguished by why each one needs a human
+// decision: genuinely failed/canceled, delivered short of the full amount,
+// or the periodic SMMWiz status check itself couldn't get a clean reading.
+async function loadNeedsAttention() {
+  try {
+    const res  = await fetch('/admin/api/needs-attention', { credentials:'include' });
+    const data = await res.json();
+    if (!data.success) return;
+
+    currentNeedsAttentionOrders = data.orders; // kept separate from currentOrders, see declaration above
+
+    const tbody = document.getElementById('needsAttentionTableBody');
+    if (!tbody) return;
+
+    if (!data.orders.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-secondary)">Nothing needs attention right now 🎉</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.orders.map(o => {
+      let reason, reasonClass;
+      if (o.status === 'fulfillment_failed') {
+        reason = 'Failed / Canceled'; reasonClass = 'badge-fulfillment_failed';
+      } else if (o.status === 'fulfilled' && o.smmwiz_remains > 0) {
+        reason = 'Partial delivery'; reasonClass = 'badge-fulfilling';
+      } else {
+        reason = 'Status check error'; reasonClass = 'badge-fulfillment_failed';
+      }
+      const delivered = o.smmwiz_remains != null ? Math.max(0, Number(o.quantity) - Number(o.smmwiz_remains)) : null;
+      return `
+        <tr>
+          <td class="mono">${esc(o.internal_id)}</td>
+          <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(o.service_name) || '—'}</td>
+          <td><span class="badge ${reasonClass}">${reason}</span></td>
+          <td>${delivered != null ? `${delivered.toLocaleString()} / ${Number(o.quantity).toLocaleString()}` : '—'}</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${esc(o.smmwiz_status) || esc(o.exo_error) || '—'}</td>
+          <td>
+            <div class="table-actions">
+              <button class="btn btn-outline btn-sm" data-action="view" data-id="${esc(o.internal_id)}">👁</button>
+              ${o.status==='fulfillment_failed'?`<button class="btn btn-success btn-sm" data-action="retry" data-id="${esc(o.internal_id)}">↺</button>`:''}
+              ${o.smmwiz_order_id?`<button class="btn btn-outline btn-sm" data-action="refill" data-id="${esc(o.internal_id)}">♻</button>`:''}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch(e) { console.error('loadNeedsAttention:', e); }
+}
+
 function viewOrder(internalId) {
-  const o = currentOrders.find(x => x.internal_id === internalId);
+  const o = currentOrders.find(x => x.internal_id === internalId)
+         || currentNeedsAttentionOrders.find(x => x.internal_id === internalId);
   if (!o) { toast('Order not found on this page — try refreshing', 'error'); return; }
   // Every value below can originate from a customer (email, link) or a
   // third-party supplier (service_name) — escape all of them before they
   // hit innerHTML. Status is safe (fixed enum from the server).
+  const remains   = o.smmwiz_remains != null ? Number(o.smmwiz_remains) : null;
+  const delivered = remains != null ? Math.max(0, Number(o.quantity) - remains) : null;
   const rows = [
     ['Order ID',          esc(o.internal_id)],
     ['Payment Reference', esc(o.paystack_ref)],
@@ -252,6 +309,8 @@ function viewOrder(internalId) {
     ['Service',           esc(o.service_name)],
     ['Platform',          esc(o.platform)],
     ['Quantity',          Number(o.quantity).toLocaleString()],
+    ['Delivered / Remaining', delivered != null ? `${delivered.toLocaleString()} / ${Number(o.quantity).toLocaleString()} (${remains.toLocaleString()} remaining)` : 'Not yet checked'],
+    ['SMMWiz Status',     esc(o.smmwiz_status) || '—'],
     ['Link',              esc(o.link)],
     ['Email',             esc(o.email)],
     ['Amount',            `GHS ${(o.amount/100).toFixed(2)}`],
@@ -271,7 +330,7 @@ async function retryOrder(id) {
   try {
     const res  = await fetch(`/admin/api/retry/${id}`, { method:'POST', credentials:'include' });
     const data = await res.json();
-    if (data.success) { toast('Order fulfilled! SMMWiz ID: ' + data.exoOrderId, 'success'); loadOrders(); }
+    if (data.success) { toast('Resubmitted to SMMWiz — SMMWiz ID: ' + data.exoOrderId, 'success'); loadOrders(); loadNeedsAttention(); }
     else toast('Retry failed: ' + data.error, 'error');
   } catch(e) { toast('Network error', 'error'); }
 }
@@ -897,6 +956,18 @@ function initDashboardListeners() {  // Sidebar overlay — close on click
     });
   }
 
+  const needsAttentionBody = document.getElementById('needsAttentionTableBody');
+  if (needsAttentionBody) {
+    needsAttentionBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      if (action === 'view')   viewOrder(btn.dataset.id);
+      if (action === 'retry')  retryOrder(btn.dataset.id);
+      if (action === 'refill') refillOrder(btn.dataset.id);
+    });
+  }
+
   // Services table markup/toggle/edit buttons — same fix as orders above.
   // loadServices() used to re-add these on every call with no {once:true} at
   // all, so listeners accumulated permanently — after N refreshes a single
@@ -948,6 +1019,9 @@ function initDashboardListeners() {  // Sidebar overlay — close on click
 
   const refreshBtn = document.getElementById('refreshOrdersBtn');
   if (refreshBtn) refreshBtn.addEventListener('click', loadOrders);
+
+  const refreshNeedsAttentionBtn = document.getElementById('refreshNeedsAttentionBtn');
+  if (refreshNeedsAttentionBtn) refreshNeedsAttentionBtn.addEventListener('click', loadNeedsAttention);
 
   const searchInput = document.getElementById('searchInput');
   if (searchInput) searchInput.addEventListener('input', debounceLoad);

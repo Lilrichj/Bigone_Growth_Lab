@@ -54,6 +54,7 @@
     <nav class="sidebar-nav">
       <button class="sidebar-link active" data-section="overview">📊 Overview</button>
       <button class="sidebar-link" data-section="orders">📦 Orders</button>
+      <button class="sidebar-link" data-section="needs-attention">⚠️ Needs Attention</button>
       <button class="sidebar-link" data-section="services">⚙️ Services</button>
       <button class="sidebar-link" data-section="settings">🔧 Settings</button>
       <button class="sidebar-link" data-section="credentials">🔑 Credentials</button>
@@ -112,7 +113,7 @@
         <select id="statusFilter">
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
-          <option value="fulfilling">Processing</option>
+          <option value="fulfilling">Pending</option>
           <option value="fulfilled">Fulfilled</option>
           <option value="fulfillment_failed">Failed</option>
         </select>
@@ -139,6 +140,34 @@
         <button class="btn btn-outline btn-sm" id="prevPage">← Prev</button>
         <span id="pageInfo">Page 1</span>
         <button class="btn btn-outline btn-sm" id="nextPage">Next →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════ NEEDS ATTENTION ═══════════════ -->
+    <div class="admin-section" id="section-needs-attention">
+      <div class="section-head">
+        <h2>Needs Attention</h2>
+        <button class="btn btn-outline btn-sm" id="refreshNeedsAttentionBtn">🔄 Refresh</button>
+      </div>
+      <p style="color:var(--text-secondary);font-size:13px;margin:-8px 0 16px">
+        Orders that failed, delivered short of the full quantity, or hit an error during the periodic
+        SMMWiz status check. Nothing here is acted on automatically — review each and decide: refill,
+        contact the customer, or leave as-is.
+      </p>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Service</th>
+              <th>Reason</th>
+              <th>Delivered</th>
+              <th>Detail</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="needsAttentionTableBody"></tbody>
+        </table>
       </div>
     </div>
 

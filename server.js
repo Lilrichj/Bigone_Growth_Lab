@@ -10,7 +10,7 @@ const rateLimit     = require('express-rate-limit');
 const bcrypt        = require('bcryptjs');
 const pool          = require('./db/pool');
 const Q             = require('./db/queries');
-const { sendOrderConfirmation, sendContactEmail } = require('./services/email');
+const { sendOrderConfirmation, sendOrderCompletionEmail, sendContactEmail } = require('./services/email');
 
 // ─── PROCESS-LEVEL SAFETY NET ─────────────────────────────────────────────────
 // Node terminates the process on an unhandled promise rejection by default
@@ -191,6 +191,18 @@ function sendConfirmationEmail(internalId) {
         .then(sent => { if (sent) return Q.markEmailSent(internalId); });
     })
     .catch(err => console.error(`[email] confirmation failed for ${internalId}:`, err.message));
+}
+
+// Fired once the delivery-status job (below, PERIODIC JOBS section) confirms
+// an order actually reached Completed or Partial — distinct from the
+// confirmation email above, which fires immediately at payment/submission.
+function sendCompletionEmail(internalId) {
+  Q.getOrderById(internalId)
+    .then(o => {
+      if (!o) return;
+      return sendOrderCompletionEmail(o);
+    })
+    .catch(err => console.error(`[email] completion email failed for ${internalId}:`, err.message));
 }
 
 // ─── KORAPAY ──────────────────────────────────────────────────────────────────
@@ -524,6 +536,11 @@ app.get('/api/order/status', async (req, res) => {
   try {
     const order = await Q.getOrderById(raw);
     if (!order) return sendError(res, 404, 'Order not found. Please check your Order ID.');
+    // Live delivery numbers, once at least one status check has run.
+    // remains stays null until then, so the frontend knows to show a plain
+    // "Pending" state rather than a 0/0 counter.
+    const remains   = order.smmwiz_remains != null ? Number(order.smmwiz_remains) : null;
+    const delivered = remains != null ? Math.max(0, Number(order.quantity) - remains) : null;
     res.json({
       success:            true,
       id:                 order.internal_id,
@@ -537,6 +554,8 @@ app.get('/api/order/status', async (req, res) => {
       amount:             order.amount,
       created_at:         order.created_at,
       estimated_delivery: order.estimated_delivery,
+      delivered,
+      remains,
       // Only expose error message if fulfillment failed, never internal IDs
       error: order.status === 'fulfillment_failed' ? 'Order fulfillment failed. Please contact support with your Order ID.' : null,
     });
@@ -669,7 +688,7 @@ app.get('/payment/callback', callbackLimiter, async (req, res) => {
 
     try {
       const exoOrderId = await fulfillOrder(claimed);
-      await Q.updateOrderStatus(ref, 'fulfilled', { exoOrderId });
+      await Q.updateOrderStatus(ref, 'fulfilling', { exoOrderId });
       sendConfirmationEmail(claimed.internal_id);
     } catch (fulfillErr) {
       console.error('Fulfillment failed (callback):', fulfillErr.message);
@@ -721,7 +740,7 @@ app.post('/api/payment/webhook', async (req, res) => {
 
     try {
       const exoOrderId = await fulfillOrder(claimed);
-      await Q.updateOrderStatus(ref, 'fulfilled', { exoOrderId });
+      await Q.updateOrderStatus(ref, 'fulfilling', { exoOrderId });
       sendConfirmationEmail(claimed.internal_id);
     } catch (fulfillErr) {
       console.error('Fulfillment failed (webhook):', fulfillErr.message);
@@ -815,6 +834,13 @@ app.get('/admin/api/orders', requireAdminAPI, async (req, res) => {
   } catch (err) { console.error('orders:', err.message); sendError(res, 500, 'Failed to load orders'); }
 });
 
+app.get('/admin/api/needs-attention', requireAdminAPI, async (req, res) => {
+  try {
+    const orders = await Q.getNeedsAttentionOrders();
+    res.json({ success: true, orders });
+  } catch (err) { console.error('needs-attention:', err.message); sendError(res, 500, 'Failed to load needs-attention list'); }
+});
+
 app.get('/admin/api/revenue-chart', requireAdminAPI, async (req, res) => {
   try { res.json({ success: true, data: await Q.getDailyRevenue(30) }); }
   catch (err) { sendError(res, 500, 'Failed to load revenue data'); }
@@ -838,8 +864,8 @@ app.post('/admin/api/retry/:internalId', requireAdminAPI, async (req, res) => {
     await pool.query(`UPDATE orders SET status='fulfilling', updated_at=NOW() WHERE internal_id=$1`, [id]);
     try {
       const exoOrderId = await fulfillOrder(order);
-      await Q.updateOrderStatus(order.paystack_ref, 'fulfilled', { exoOrderId });
-      res.json({ success: true, message: 'Order fulfilled successfully', exoOrderId });
+      await Q.updateOrderStatus(order.paystack_ref, 'fulfilling', { exoOrderId });
+      res.json({ success: true, message: 'Order resubmitted to SMMWiz — delivery status will update automatically', exoOrderId });
     } catch (fe) {
       await Q.updateOrderStatus(order.paystack_ref, 'fulfillment_failed', { exoError: fe.message });
       sendError(res, 500, 'Fulfillment failed: ' + fe.message);
@@ -1262,9 +1288,9 @@ async function reconcilePendingOrders() {
 
         try {
           const exoOrderId = await fulfillOrder(claimed);
-          await Q.updateOrderStatus(ref, 'fulfilled', { exoOrderId });
+          await Q.updateOrderStatus(ref, 'fulfilling', { exoOrderId });
           sendConfirmationEmail(claimed.internal_id);
-          console.log(`[reconcile] Recovered and fulfilled ${claimed.internal_id}`);
+          console.log(`[reconcile] Recovered and submitted ${claimed.internal_id} to SMMWiz`);
         } catch (fulfillErr) {
           console.error(`[reconcile] Fulfillment failed for ${ref}:`, fulfillErr.message);
           await Q.updateOrderStatus(ref, 'fulfillment_failed', { exoError: fulfillErr.message });
@@ -1278,6 +1304,70 @@ async function reconcilePendingOrders() {
   }
 }
 setInterval(reconcilePendingOrders, 10 * 60 * 1000);
+
+// 4. Check real delivery status on SMMWiz every 10 minutes.
+// An order reaching this system's 'fulfilling' status only means SMMWiz
+// *accepted* it — this job is what confirms actual delivery, so "Fulfilled"
+// stops meaning "we asked SMMWiz to do it" and starts meaning "SMMWiz says
+// it's done". Batches every in-progress order's SMMWiz ID into one status
+// call rather than one call per order.
+async function checkOrderDeliveryStatus() {
+  try {
+    const awaiting = await Q.getOrdersAwaitingDeliveryCheck();
+    if (!awaiting.length) return;
+    console.log(`[delivery-check] Checking ${awaiting.length} in-progress order(s)...`);
+
+    const idList = awaiting.map(o => o.smmwiz_order_id).join(',');
+    let statusMap;
+    try {
+      statusMap = await withRetry(
+        () => smmwizRequest({ action: 'status', orders: idList }),
+        3, 'delivery-status'
+      );
+    } catch (err) {
+      console.error('[delivery-check] Batch status call failed:', err.message);
+      return; // try again on the next sweep rather than partially processing
+    }
+
+    for (const order of awaiting) {
+      const entry = statusMap[order.smmwiz_order_id];
+      if (!entry) continue; // SMMWiz didn't return anything for this ID at all
+
+      if (entry.error) {
+        // SMMWiz couldn't find/report this order — surface it via
+        // smmwiz_status so it shows up in the admin "Needs Attention" view,
+        // without touching the order's actual status.
+        const errMsg = Array.isArray(entry.error) ? entry.error.join('; ') : String(entry.error);
+        await Q.updateOrderStatus(order.paystack_ref, 'fulfilling', { smmwizStatus: `Error: ${errMsg}` });
+        continue;
+      }
+
+      const smmwizStatus = entry.status || 'Pending';
+      const remains = entry.remains != null ? parseInt(entry.remains, 10) : null;
+
+      if (smmwizStatus === 'Completed' || smmwizStatus === 'Partial') {
+        await Q.updateOrderStatus(order.paystack_ref, 'fulfilled', {
+          smmwizStatus, smmwizRemains: remains || 0,
+        });
+        sendCompletionEmail(order.internal_id);
+        console.log(`[delivery-check] ${order.internal_id}: ${smmwizStatus}${remains ? ` (${remains} remaining)` : ''}`);
+      } else if (smmwizStatus === 'Canceled') {
+        await Q.updateOrderStatus(order.paystack_ref, 'fulfillment_failed', {
+          smmwizStatus, exoError: 'Canceled by supplier',
+        });
+        console.log(`[delivery-check] ${order.internal_id}: Canceled by SMMWiz`);
+      } else {
+        // Pending / In progress — still working, just refresh the live counter
+        await Q.updateOrderStatus(order.paystack_ref, 'fulfilling', {
+          smmwizStatus, smmwizRemains: remains,
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[delivery-check] Sweep failed:', err.message);
+  }
+}
+setInterval(checkOrderDeliveryStatus, 10 * 60 * 1000);
 
 // ─── START ────────────────────────────────────────────────────────────────────
 const server = app.listen(CONFIG.PORT, () => {

@@ -31,6 +31,15 @@ CREATE INDEX IF NOT EXISTS idx_orders_email        ON orders(email);
 CREATE INDEX IF NOT EXISTS idx_orders_status       ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at   ON orders(created_at DESC);
 
+-- Live delivery tracking (added for real-time SMMWiz status polling).
+-- smmwiz_status holds SMMWiz's raw status string (Pending/In progress/
+-- Completed/Partial/Canceled), or an error message if the periodic status
+-- check couldn't find that order on SMMWiz's side — that distinction is what
+-- lets the admin "Needs Attention" view separate genuine check failures from
+-- normal in-progress orders.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS smmwiz_status  VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS smmwiz_remains INTEGER;
+
 -- ─── SERVICE MAP ────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS service_map (
   id                      SERIAL PRIMARY KEY,

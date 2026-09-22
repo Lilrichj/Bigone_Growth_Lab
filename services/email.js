@@ -162,6 +162,120 @@ async function sendOrderConfirmation(order) {
   }
 }
 
+async function sendOrderCompletionEmail(order) {
+  try {
+    const { getSetting } = require('../db/queries');
+    const whatsappNumber = await getSetting('whatsapp_number').catch(() => '');
+    const baseUrl = (process.env.BASE_URL || 'https://bigonegrowthlab.store').replace(/\/$/, '');
+
+    const delivered = order.smmwiz_remains != null
+      ? Math.max(0, Number(order.quantity) - Number(order.smmwiz_remains))
+      : Number(order.quantity);
+    const remains = Number(order.smmwiz_remains) || 0;
+    const isPartial = remains > 0;
+
+    const cleanPhone = whatsappNumber ? whatsappNumber.replace(/\D/g, '') : '';
+    const whatsappBtn = cleanPhone
+      ? `<a href="https://wa.me/${cleanPhone}"
+            style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;
+                   padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px;margin:8px 6px;">
+           💬 Chat with Support on WhatsApp
+         </a>`
+      : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order Delivered — BigOne Growth Lab</title></head>
+<body style="margin:0;padding:0;background:#0a0f1e;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f1e;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <tr><td style="background:linear-gradient(135deg,${isPartial ? '#f59e0b,#ea580c' : '#22c55e,#00e5ff'});border-radius:16px 16px 0 0;padding:36px 40px;text-align:center;">
+          <p style="margin:0 0 8px;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:2px;text-transform:uppercase;">BigOne Growth Lab</p>
+          <h1 style="margin:0;font-size:28px;color:#fff;font-weight:800;">
+            ${isPartial ? '&#x26A0;&#xFE0F; Order Delivered (Partial)' : '&#x2705; Order Delivered!'}
+          </h1>
+          <p style="margin:10px 0 0;color:rgba(255,255,255,0.9);font-size:15px;">
+            ${isPartial ? 'Delivery finished short of the full amount — see details below.' : 'Your order has been fully delivered.'}
+          </p>
+        </td></tr>
+
+        <tr><td style="background:#111827;padding:36px 40px;">
+
+          <div style="background:linear-gradient(135deg,rgba(0,229,255,0.1),rgba(124,58,255,0.1));
+                      border:2px solid rgba(0,229,255,0.3);border-radius:12px;
+                      padding:24px;text-align:center;margin-bottom:28px;">
+            <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;letter-spacing:1.5px;text-transform:uppercase;">Your Order ID</p>
+            <p style="margin:0 0 8px;font-size:30px;font-weight:800;color:#00e5ff;
+                      font-family:'Courier New',monospace;letter-spacing:2px;">${esc(order.internal_id)}</p>
+          </div>
+
+          <div style="background:${isPartial ? 'rgba(245,158,11,0.08)' : 'rgba(34,197,94,0.08)'};
+                      border:1px solid ${isPartial ? 'rgba(245,158,11,0.25)' : 'rgba(34,197,94,0.25)'};
+                      border-radius:10px;padding:20px 24px;margin-bottom:28px;text-align:center;">
+            <p style="margin:0;font-size:22px;font-weight:800;color:${isPartial ? '#f59e0b' : '#22c55e'};">
+              ${delivered.toLocaleString()} / ${Number(order.quantity).toLocaleString()} delivered
+            </p>
+            ${isPartial ? `<p style="margin:8px 0 0;font-size:13px;color:#94a3b8;">
+              ${remains.toLocaleString()} short of your full order. If you believe this is an error,
+              please contact support with your Order ID above.</p>` : ''}
+          </div>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px;">
+            ${[
+              ['Service',  esc(order.service_name)],
+              ['Platform', esc(order.platform ? order.platform.charAt(0).toUpperCase() + order.platform.slice(1) : '—')],
+              ['Profile / Post Link', esc(order.link)],
+            ].map(([label, val], i) => `
+            <tr style="background:${i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent'}">
+              <td style="padding:10px 14px;font-size:13px;color:#94a3b8;border-bottom:1px solid rgba(255,255,255,0.06);width:38%;">${label}</td>
+              <td style="padding:10px 14px;font-size:13px;color:#f1f5f9;border-bottom:1px solid rgba(255,255,255,0.06);word-break:break-all;">${val}</td>
+            </tr>`).join('')}
+          </table>
+
+          <div style="text-align:center;margin-bottom:8px;">
+            <a href="${baseUrl}/track?orderId=${esc(order.internal_id)}"
+               style="display:inline-block;background:linear-gradient(135deg,#00e5ff,#7c3aff);
+                      color:#fff;text-decoration:none;padding:13px 30px;border-radius:8px;
+                      font-weight:700;font-size:15px;margin:8px 6px;">
+              &#x1F4E6; View Order
+            </a>
+            ${whatsappBtn}
+          </div>
+
+        </td></tr>
+
+        <tr><td style="background:#0d1326;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center;">
+          <p style="margin:0 0 6px;font-size:12px;color:#475569;">
+            Questions? Contact us with your Order ID: <strong style="color:#f1f5f9;">${esc(order.internal_id)}</strong>
+          </p>
+          <p style="margin:0;font-size:12px;color:#475569;">
+            &#169; 2025 BigOne Growth Lab &nbsp;&middot;&nbsp;
+            <a href="mailto:bigonegrowthlab@gmail.com" style="color:#00e5ff;text-decoration:none;">bigonegrowthlab@gmail.com</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    await transporter.sendMail({
+      from:    process.env.EMAIL_FROM || '"BigOne Growth Lab" <bigonegrowthlab@gmail.com>',
+      to:      order.email,
+      subject: `${isPartial ? 'Order Delivered (Partial)' : 'Order Delivered'} — ${order.internal_id} | BigOne Growth Lab`,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error('sendOrderCompletionEmail error:', err.message);
+    return false;
+  }
+}
+
 async function sendContactEmail({ name, email, message }) {
   const timestamp = new Date().toLocaleString('en-GH', {
     timeZone: 'Africa/Accra', dateStyle: 'full', timeStyle: 'short',
@@ -222,4 +336,4 @@ async function sendContactEmail({ name, email, message }) {
   });
 }
 
-module.exports = { sendOrderConfirmation, sendContactEmail };
+module.exports = { sendOrderConfirmation, sendOrderCompletionEmail, sendContactEmail };

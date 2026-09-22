@@ -34,15 +34,17 @@ async function getOrderById(internalId) {
 }
 
 async function updateOrderStatus(paystackRef, status, extra = {}) {
-  const { exoOrderId, exoError, emailSent } = extra;
+  const { exoOrderId, exoError, emailSent, smmwizStatus, smmwizRemains } = extra;
   const sets = ['status = $2', 'updated_at = NOW()'];
   const values = [paystackRef, status];
   let idx = 3;
 
-  if (exoOrderId !== undefined) { sets.push(`smmwiz_order_id = $${idx++}`); values.push(exoOrderId); }
-  if (exoError !== undefined)   { sets.push(`exo_error = $${idx++}`);       values.push(exoError); }
-  if (emailSent !== undefined)  { sets.push(`email_sent = $${idx++}`);       values.push(emailSent); }
-  if (status === 'fulfilled')   { sets.push('fulfilled_at = NOW()'); }
+  if (exoOrderId !== undefined)    { sets.push(`smmwiz_order_id = $${idx++}`); values.push(exoOrderId); }
+  if (exoError !== undefined)      { sets.push(`exo_error = $${idx++}`);       values.push(exoError); }
+  if (emailSent !== undefined)     { sets.push(`email_sent = $${idx++}`);      values.push(emailSent); }
+  if (smmwizStatus !== undefined)  { sets.push(`smmwiz_status = $${idx++}`);   values.push(smmwizStatus); }
+  if (smmwizRemains !== undefined) { sets.push(`smmwiz_remains = $${idx++}`);  values.push(smmwizRemains); }
+  if (status === 'fulfilled')      { sets.push('fulfilled_at = NOW()'); }
 
   const result = await pool.query(
     `UPDATE orders SET ${sets.join(', ')} WHERE paystack_ref = $1 RETURNING *`,
@@ -71,6 +73,37 @@ async function getStalePendingOrders(minMinutes = 15, maxHours = 24) {
      ORDER BY created_at ASC
      LIMIT 50`,
     [String(minMinutes), String(maxHours)]
+  );
+  return result.rows;
+}
+
+// Orders submitted to SMMWiz but not yet confirmed as truly complete — the
+// live delivery status job checks these on its periodic sweep. Capped at 200
+// per run so a large backlog can't turn one sweep into an unbounded batch
+// call against SMMWiz's status endpoint.
+async function getOrdersAwaitingDeliveryCheck() {
+  const result = await pool.query(
+    `SELECT * FROM orders
+     WHERE status = 'fulfilling' AND smmwiz_order_id IS NOT NULL
+     ORDER BY updated_at ASC
+     LIMIT 200`
+  );
+  return result.rows;
+}
+
+// Orders that need a human to look at them: failed/canceled, delivered short
+// of the full quantity, or ones where the periodic status check itself
+// couldn't get a clean reading from SMMWiz (distinct from ordinary
+// still-in-progress orders, which have a normal Pending/In progress value).
+async function getNeedsAttentionOrders() {
+  const result = await pool.query(
+    `SELECT * FROM orders
+     WHERE status = 'fulfillment_failed'
+        OR (status = 'fulfilled' AND smmwiz_remains > 0)
+        OR (status = 'fulfilling' AND smmwiz_status IS NOT NULL
+            AND smmwiz_status NOT IN ('Pending', 'In progress'))
+     ORDER BY updated_at DESC
+     LIMIT 100`
   );
   return result.rows;
 }
@@ -313,6 +346,8 @@ module.exports = {
   updateOrderStatus,
   markEmailSent,
   getStalePendingOrders,
+  getOrdersAwaitingDeliveryCheck,
+  getNeedsAttentionOrders,
   getAllOrders,
   getDashboardStats,
   getDailyRevenue,
