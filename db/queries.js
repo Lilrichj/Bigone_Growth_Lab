@@ -145,10 +145,14 @@ async function getDashboardStats() {
       COUNT(*) FILTER (WHERE status = 'pending')               AS pending,
       COUNT(*) FILTER (WHERE status = 'fulfilling')            AS fulfilling,
       COUNT(*) FILTER (WHERE status = 'fulfillment_failed')    AS failed,
-      COALESCE(SUM(amount) FILTER (WHERE status = 'fulfilled'), 0) AS total_revenue_ghs,
+      -- Revenue counts every paid order the supplier accepted ('fulfilling'
+      -- = in progress, 'fulfilled' = delivered). Counting only 'fulfilled'
+      -- made revenue lag behind real payments by however long delivery takes,
+      -- and stall completely if the delivery-status check ever stopped working.
+      COALESCE(SUM(amount) FILTER (WHERE status IN ('fulfilling','fulfilled')), 0) AS total_revenue_ghs,
       COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE)       AS orders_today,
       COALESCE(SUM(amount) FILTER (
-        WHERE status = 'fulfilled' AND created_at >= CURRENT_DATE
+        WHERE status IN ('fulfilling','fulfilled') AND created_at >= CURRENT_DATE
       ), 0) AS revenue_today_ghs
     FROM orders
   `);
@@ -173,7 +177,7 @@ async function getDailyRevenue(days = 30) {
       TO_CHAR(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS date,
       COALESCE(SUM(amount), 0) AS revenue_pesewas
     FROM orders
-    WHERE status = 'fulfilled'
+    WHERE status IN ('fulfilling','fulfilled')
       AND created_at >= NOW() - ($1 * INTERVAL '1 day')
     GROUP BY 1
     ORDER BY 1 ASC

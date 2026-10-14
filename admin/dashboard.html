@@ -87,6 +87,7 @@
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="sTotalOrders">—</div></div>
         <div class="stat-card"><div class="stat-label">Fulfilled</div><div class="stat-value green" id="sFulfilled">—</div></div>
         <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value yellow" id="sPending">—</div></div>
+        <div class="stat-card"><div class="stat-label">In Process</div><div class="stat-value cyan" id="sInProcess">—</div></div>
         <div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value red" id="sFailed">—</div></div>
         <div class="stat-card"><div class="stat-label">Orders Today</div><div class="stat-value cyan" id="sOrdersToday">—</div></div>
         <div class="stat-card"><div class="stat-label">Revenue Today</div><div class="stat-value cyan" id="sRevenueToday">—</div></div>
@@ -113,7 +114,7 @@
         <select id="statusFilter">
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
-          <option value="fulfilling">Pending</option>
+          <option value="fulfilling">In Process</option>
           <option value="fulfilled">Fulfilled</option>
           <option value="fulfillment_failed">Failed</option>
         </select>

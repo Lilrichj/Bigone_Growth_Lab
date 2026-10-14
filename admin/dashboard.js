@@ -46,6 +46,12 @@ function safeStatusClass(status) {
   return VALID_ORDER_STATUSES.has(status) ? status : 'pending';
 }
 
+// One wording per status, identical to the customer-facing track page, so the
+// two sides can't drift apart: 'pending' = awaiting payment, 'fulfilling' =
+// paid and being delivered by the supplier.
+const STATUS_LABELS = { pending:'Pending', fulfilling:'In Process', fulfilled:'Fulfilled', fulfillment_failed:'Failed' };
+function statusLabel(status) { return STATUS_LABELS[status] || String(status); }
+
 // Auth guard: checked once, inside DOMContentLoaded near the bottom of this
 // file (search "INIT"). A second copy used to run here at module load too —
 // removed, since it just fired the identical request twice on every page load.
@@ -134,6 +140,8 @@ async function loadOverview() {
       document.getElementById('sTotalOrders').textContent  = s.total.toLocaleString();
       document.getElementById('sFulfilled').textContent    = s.fulfilled.toLocaleString();
       document.getElementById('sPending').textContent      = s.pending.toLocaleString();
+      const inProcessEl = document.getElementById('sInProcess');
+      if (inProcessEl) inProcessEl.textContent = s.fulfilling.toLocaleString();
       document.getElementById('sFailed').textContent       = s.failed.toLocaleString();
       document.getElementById('sOrdersToday').textContent  = s.orders_today.toLocaleString();
       document.getElementById('sRevenueToday').textContent = 'GHS ' + s.revenue_today_ghs.toFixed(2);
@@ -220,7 +228,7 @@ async function loadOrders() {
           <td>${Number(o.quantity).toLocaleString()}</td>
           <td>GHS ${(o.amount/100).toFixed(2)}</td>
           <td>
-            <span class="badge badge-${safeStatusClass(o.status)}">${esc(o.status).replace('fulfillment_','')}</span>
+            <span class="badge badge-${safeStatusClass(o.status)}">${esc(statusLabel(o.status))}</span>
             ${o.smmwiz_remains != null ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${(Number(o.quantity)-Number(o.smmwiz_remains)).toLocaleString()}/${Number(o.quantity).toLocaleString()}</div>` : ''}
           </td>
           <td style="white-space:nowrap">${new Date(o.created_at).toLocaleDateString('en-GH')}</td>
@@ -314,7 +322,7 @@ function viewOrder(internalId) {
     ['Link',              esc(o.link)],
     ['Email',             esc(o.email)],
     ['Amount',            `GHS ${(o.amount/100).toFixed(2)}`],
-    ['Status',            `<span class="badge badge-${safeStatusClass(o.status)}">${esc(o.status)}</span>`],
+    ['Status',            `<span class="badge badge-${safeStatusClass(o.status)}">${esc(statusLabel(o.status))}</span>`],
     ['Est. Delivery',     esc(o.estimated_delivery) || '—'],
     ['Created',           new Date(o.created_at).toLocaleString('en-GH')],
     ['Fulfilled At',      o.fulfilled_at ? new Date(o.fulfilled_at).toLocaleString('en-GH') : '—'],
